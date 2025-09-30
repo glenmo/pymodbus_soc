@@ -15,6 +15,7 @@ def main():
 
         # Read holding registers (FC=3). Use read_input_registers for FC=4 if required.
         rr = client.read_holding_registers(address=ADDRESS, count=COUNT, unit=UNIT_ID)
+
         if rr.isError():
             raise ModbusException(f"Modbus error: {rr}")
 
