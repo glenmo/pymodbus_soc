@@ -119,7 +119,7 @@ def main():
     p.add_argument("--timeout", type=float, default=2.0, help="Socket timeout seconds")
     args = p.parse_args()
 
-    client = ModbusTcpClient(args.host, port=args.port, timeout=args.timeout, unit=args.slave)
+    client = ModbusTcpClient(args.host, port=args.port, timeout=args.timeout)
     if not client.connect():
         print(f"ERROR: Could not connect to {args.host}:{args.port}", file=sys.stderr)
         sys.exit(2)
