@@ -94,6 +94,9 @@ Examples:
     parser.add_argument("--debug", action="store_true",
                         help="Enable debug output")
     
+    parser.add_argument("--scale", type=float, default=1.0,
+                    help="Scaling factor for the output value (default: 1.0)")
+
     args = parser.parse_args()
     
     # Set up debug logging if requested
