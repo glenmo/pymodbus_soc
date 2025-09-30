@@ -208,8 +208,8 @@ Examples:
                     # Add scaled value output
                     scaled_value = result.registers[0] * args.scale
                     print(f"Register {args.register} scaled value: {scaled_value}")
-            else:
-                print(f"Registers {args.register} to {args.register + args.count - 1}:")
+                else:
+                    print(f"Registers {args.register} to {args.register + args.count - 1}:")
                 for i, value in enumerate(result.registers):
                     reg_addr = register_num + i
                     print(f"  Register {reg_addr}: {value}")
