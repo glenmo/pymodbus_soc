@@ -1,5 +1,5 @@
 from pymodbus.client import ModbusTcpClient
-from pymodbus.constants import Endian
+
 
 # Configuration
 IP_ADDRESS = "192.168.11.81"
