@@ -28,6 +28,13 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def convert_32bit_value(high_reg, low_reg):
+    """
+    Convert two 16-bit registers to a 32-bit value.
+    Assumes big-endian format (high register first).
+    """
+    return (high_reg << 16) | low_reg
+
 def parse_register_address(register_str):
     """
     Parse register address string (e.g., 40001) and return the actual register number.
@@ -81,6 +88,9 @@ Examples:
                         default="holding_registers",
                         help="Register type (default: holding_registers)")
     
+    parser.add_argument("--bit-length", type=int, choices=[16, 32], default=16,
+                        help="Bit length of the register (16 or 32 bits, default: 16)")
+    
     parser.add_argument("--debug", action="store_true",
                         help="Enable debug output")
     
@@ -99,6 +109,13 @@ Examples:
     except ValueError as e:
         logger.error(f"Error parsing register address: {e}")
         sys.exit(1)
+    
+    # Adjust count based on bit length
+    if args.bit_length == 32:
+        actual_count = args.count * 2  # 32-bit requires 2 registers per value
+        logger.info(f"32-bit mode: reading {actual_count} registers for {args.count} 32-bit values")
+    else:
+        actual_count = args.count
     
     # Validate count
     if args.count < 1:
@@ -136,25 +153,25 @@ Examples:
         if args.type == "holding_registers":
             result = client.read_holding_registers(
                 address=register_num,
-                count=args.count
+                count=actual_count
                 # No 'unit' argument here
             )
         elif args.type == "input_registers":
             result = client.read_input_registers(
                 address=register_num,
-                count=args.count
+                count=actual_count
                 # No 'unit' argument here
             )
         elif args.type == "coils":
             result = client.read_coils(
                 address=register_num,
-                count=args.count
+                count=actual_count
                 # No 'unit' argument here
             )
         elif args.type == "discrete_inputs":
             result = client.read_discrete_inputs(
                 address=register_num,
-                count=args.count
+                count=actual_count
                 # No 'unit' argument here
             )
         
@@ -163,13 +180,32 @@ Examples:
             logger.info(f"Successfully read {len(result.registers)} registers")
             
             # Display results
-            if args.count == 1:
-                print(f"Register {args.register} value: {result.registers[0]}")
+            if args.bit_length == 32:
+                # Handle 32-bit values
+                if args.count == 1:
+                    if len(result.registers) >= 2:
+                        value_32 = convert_32bit_value(result.registers[0], result.registers[1])
+                        print(f"Register {args.register} (32-bit) value: {value_32}")
+                        print(f"  Raw registers: {result.registers[0]} (high), {result.registers[1]} (low)")
+                    else:
+                        print(f"Error: Need 2 registers for 32-bit value, got {len(result.registers)}")
+                else:
+                    print(f"32-bit values starting at register {args.register}:")
+                    for i in range(0, len(result.registers), 2):
+                        if i + 1 < len(result.registers):
+                            value_32 = convert_32bit_value(result.registers[i], result.registers[i+1])
+                            reg_addr = register_num + i
+                            print(f"  Registers {reg_addr}-{reg_addr+1} (32-bit): {value_32}")
+                            print(f"    Raw: {result.registers[i]} (high), {result.registers[i+1]} (low)")
             else:
-                print(f"Registers {args.register} to {args.register + args.count - 1}:")
-                for i, value in enumerate(result.registers):
-                    reg_addr = register_num + i
-                    print(f"  Register {reg_addr}: {value}")
+                # Handle 16-bit values (original logic)
+                if args.count == 1:
+                    print(f"Register {args.register} value: {result.registers[0]}")
+                else:
+                    print(f"Registers {args.register} to {args.register + args.count - 1}:")
+                    for i, value in enumerate(result.registers):
+                        reg_addr = register_num + i
+                        print(f"  Register {reg_addr}: {value}")
                     
         else:
             logger.error(f"Modbus error: {result}")
