@@ -200,16 +200,23 @@ Examples:
                             reg_addr = register_num + i
                             print(f"  Registers {reg_addr}-{reg_addr+1} (32-bit): {value_32}")
                             print(f"    Raw: {result.registers[i]} (high), {result.registers[i+1]} (low)")
+           
             else:
                 # Handle 16-bit values (original logic)
                 if args.count == 1:
                     print(f"Register {args.register} value: {result.registers[0]}")
-                else:
-                    print(f"Registers {args.register} to {args.register + args.count - 1}:")
-                    for i, value in enumerate(result.registers):
-                        reg_addr = register_num + i
-                        print(f"  Register {reg_addr}: {value}")
-                    
+                    # Add scaled value output
+                    scaled_value = result.registers[0] * args.scale
+                    print(f"Register {args.register} scaled value: {scaled_value}")
+            else:
+                print(f"Registers {args.register} to {args.register + args.count - 1}:")
+                for i, value in enumerate(result.registers):
+                    reg_addr = register_num + i
+                    print(f"  Register {reg_addr}: {value}")
+                    # Add scaled value output for each register
+                    scaled_value = value * args.scale
+                    print(f"    Scaled value: {scaled_value}")
+
         else:
             logger.error(f"Modbus error: {result}")
             sys.exit(1)
